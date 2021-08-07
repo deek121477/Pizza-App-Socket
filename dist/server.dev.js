@@ -10,7 +10,9 @@ var path = require('path');
 
 var expressLayout = require('express-ejs-layouts');
 
-var PORT = process.env.PORT || 3000;
+var PORT = process.env.PORT || 3000; //Assets
+
+app.use(express["static"]('public'));
 app.get('/', function (req, res) {
   res.render('home');
 }); //set template engine
