@@ -1,5 +1,7 @@
 "use strict";
 
+require('dotenv').config();
+
 var express = require('express');
 
 var app = express();
@@ -10,25 +12,58 @@ var path = require('path');
 
 var expressLayout = require('express-ejs-layouts');
 
-var PORT = process.env.PORT || 3000; //Assets
+var PORT = process.env.PORT || 3000;
 
-app.use(express["static"]('public')); //set template engine
+var mongoose = require('mongoose');
+
+var session = require('express-session');
+
+var flash = require('express-flash');
+
+var MongoDbStore = require('connect-mongo'); // Database connection
+
+
+mongoose.connect(process.env.MONGO_CONNECTION_URL, {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+  useFindAndModify: true
+});
+var connection = mongoose.connection;
+connection.once('open', function () {
+  console.log('Database connected...');
+})["catch"](function (err) {
+  console.log('Connection failed...');
+}); // Session config
+
+app.use(session({
+  secret: process.env.COOKIE_SECRET,
+  resave: false,
+  store: MongoDbStore.create({
+    mongoUrl: process.env.MONGO_CONNECTION_URL
+  }),
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24
+  } // 24 hour
+
+}));
+app.use(flash()); //Assets
+
+app.use(express["static"]('public'));
+app.use(express.json()); //Global middlewares
+
+app.use(function (req, res, next) {
+  res.locals.session = req.session;
+  next();
+}); //set template engine
 
 app.use(expressLayout);
 app.set('views', path.join(__dirname, '/resources/views'));
 app.set('view engine', 'ejs');
-app.get('/', function (req, res) {
-  res.render('home');
-});
-app.get('/cart', function (req, res) {
-  res.render('customers/cart');
-});
-app.get('/login', function (req, res) {
-  res.render('auth/login');
-});
-app.get('/register', function (req, res) {
-  res.render('auth/register');
-});
+
+require('./routes/web')(app);
+
 app.listen(3000, function () {
   console.log("Listening on port ".concat(PORT));
 });
