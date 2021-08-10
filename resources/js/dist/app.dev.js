@@ -4,6 +4,8 @@ var _axios = _interopRequireDefault(require("axios"));
 
 var _noty = _interopRequireDefault(require("noty"));
 
+var _admin = require("./admin");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 var addToCart = document.querySelectorAll('.add-to-cart');
@@ -34,5 +36,15 @@ addToCart.forEach(function (btn) {
     var pizza = JSON.parse(btn.dataset.pizza);
     updateCart(pizza);
   });
-});
+}); // Remove alert message after X seconds
+
+var alertMsg = document.querySelector('#success-alert');
+
+if (alertMsg) {
+  setTimeout(function () {
+    alertMsg.remove();
+  }, 2000);
+}
+
+(0, _admin.initAdmin)();
 //# sourceMappingURL=app.dev.js.map
