@@ -20,7 +20,9 @@ var session = require('express-session');
 
 var flash = require('express-flash');
 
-var MongoDbStore = require('connect-mongo'); // Database connection
+var MongoDbStore = require('connect-mongo');
+
+var passport = require('passport'); // Database connection
 
 
 mongoose.connect(process.env.MONGO_CONNECTION_URL, {
@@ -34,7 +36,13 @@ connection.once('open', function () {
   console.log('Database connected...');
 })["catch"](function (err) {
   console.log('Connection failed...');
-}); // Session config
+}); //Passport config
+
+var passportInit = require('./app/config/passport');
+
+passportInit(passport);
+app.use(passport.initialize());
+app.use(passport.session()); // Session config
 
 app.use(session({
   secret: process.env.COOKIE_SECRET,
@@ -51,6 +59,9 @@ app.use(session({
 app.use(flash()); //Assets
 
 app.use(express["static"]('public'));
+app.use(express.urlencoded({
+  extended: false
+}));
 app.use(express.json()); //Global middlewares
 
 app.use(function (req, res, next) {
