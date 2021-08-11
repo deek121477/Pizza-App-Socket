@@ -24,9 +24,16 @@ function orderController() {
         address: address
       });
       order.save().then(function (result) {
-        req.flash('success', 'Order placed Successfully');
-        delete req.session.cart;
-        return res.redirect('/customer/orders');
+        Order.populate(result, {
+          path: 'customerId'
+        }, function (err, placedOrder) {
+          req.flash('success', 'Order placed Successfully');
+          delete req.session.cart; // Emit event 
+
+          var eventEmitter = req.app.get('eventEmitter');
+          eventEmitter.emit('orderPlaced', placedOrder);
+          return res.redirect('/customer/orders');
+        });
       })["catch"](function (err) {
         req.flash('error', 'Something went wrong');
         return res.redirect('/cart');
@@ -58,6 +65,37 @@ function orderController() {
             case 5:
             case "end":
               return _context.stop();
+          }
+        }
+      });
+    },
+    show: function show(req, res) {
+      var order;
+      return regeneratorRuntime.async(function show$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return regeneratorRuntime.awrap(Order.findById(req.params.id));
+
+            case 2:
+              order = _context2.sent;
+
+              if (!(req.user._id.toString() === order.customerId.toString())) {
+                _context2.next = 7;
+                break;
+              }
+
+              return _context2.abrupt("return", res.render('customers/singleOrder', {
+                order: order
+              }));
+
+            case 7:
+              return _context2.abrupt("return", res.redirect('/'));
+
+            case 8:
+            case "end":
+              return _context2.stop();
           }
         }
       });

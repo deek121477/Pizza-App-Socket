@@ -16,6 +16,8 @@ var admin = require('../app/http/middlewares/admin');
 
 var adminOrderController = require('../app/http/controllers/admin/orderController');
 
+var statusController = require('../app/http/controllers/admin/statusController');
+
 function initRoutes(app) {
   var auth = authController();
   var home = homeController();
@@ -29,9 +31,11 @@ function initRoutes(app) {
   app.post('/update-cart', cartController().update); //Customer Routes
 
   app.post('/orders', orderController().store);
-  app.get('/customer/orders', auth1, orderController().index); // Admin routes
+  app.get('/customer/orders', auth1, orderController().index);
+  app.get('/customer/orders/:id', auth1, orderController().show); // Admin routes
 
   app.get('/admin/orders', admin, adminOrderController().index);
+  app.post('/admin/order/status', admin, statusController().update);
 }
 
 module.exports = initRoutes;

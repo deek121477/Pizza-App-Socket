@@ -22,7 +22,9 @@ var flash = require('express-flash');
 
 var MongoDbStore = require('connect-mongo');
 
-var passport = require('passport'); // Database connection
+var passport = require('passport');
+
+var Emitter = require('events'); // Database connection
 
 
 mongoose.connect(process.env.MONGO_CONNECTION_URL, {
@@ -36,13 +38,10 @@ connection.once('open', function () {
   console.log('Database connected...');
 })["catch"](function (err) {
   console.log('Connection failed...');
-}); //Passport config
+}); //Event emiiter
 
-var passportInit = require('./app/config/passport');
-
-passportInit(passport);
-app.use(passport.initialize());
-app.use(passport.session()); // Session config
+var eventEmitter = new Emitter();
+app.set('eventEmitter', eventEmitter); // Session config
 
 app.use(session({
   secret: process.env.COOKIE_SECRET,
@@ -55,7 +54,13 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24
   } // 24 hour
 
-}));
+})); //Passport config
+
+var passportInit = require('./app/config/passport');
+
+passportInit(passport);
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(flash()); //Assets
 
 app.use(express["static"]('public'));
@@ -66,6 +71,7 @@ app.use(express.json()); //Global middlewares
 
 app.use(function (req, res, next) {
   res.locals.session = req.session;
+  res.locals.user = req.user;
   next();
 }); //set template engine
 
@@ -75,7 +81,21 @@ app.set('view engine', 'ejs');
 
 require('./routes/web')(app);
 
-app.listen(3000, function () {
+var server = app.listen(3000, function () {
   console.log("Listening on port ".concat(PORT));
+}); //Socket
+
+var io = require('socket.io')(server);
+
+io.on('connection', function (socket) {
+  socket.on('join', function (orderId) {
+    socket.join(orderId);
+  });
+});
+eventEmitter.on('orderUpdated', function (data) {
+  io.to("order_".concat(data.id)).emit('orderUpdated', data);
+});
+eventEmitter.on('orderPlaced', function (data) {
+  io.to('adminRoom').emit('orderPlaced', data);
 });
 //# sourceMappingURL=server.dev.js.map

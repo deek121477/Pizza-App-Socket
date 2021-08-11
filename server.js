@@ -11,6 +11,7 @@ const flash = require('express-flash')
 const MongoDbStore = require('connect-mongo')
 
 const passport = require('passport')
+const Emitter = require('events')
 
 
 // Database connection
@@ -24,7 +25,10 @@ connection.once('open', () => {
     console.log('Connection failed...')
 });
 
+//Event emiiter
 
+const eventEmitter = new Emitter()
+app.set('eventEmitter', eventEmitter)
 
 
 
@@ -76,6 +80,25 @@ app.set('view engine', 'ejs')
 require('./routes/web')(app)
 
 
-app.listen(3000, () => {
+const server = app.listen(3000, () => {
     console.log(`Listening on port ${PORT}`)
+})
+
+//Socket
+
+const io = require('socket.io')(server)
+io.on('connection', (socket)=>{
+     
+     socket.on('join', (orderId) =>{
+           socket.join(orderId)
+     })
+})
+
+
+eventEmitter.on('orderUpdated', (data) => {
+    io.to(`order_${data.id}`).emit('orderUpdated', data)
+})
+
+eventEmitter.on('orderPlaced', (data) => {
+    io.to('adminRoom').emit('orderPlaced', data)
 })
