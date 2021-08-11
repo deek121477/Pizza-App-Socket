@@ -81,6 +81,9 @@ app.set('view engine', 'ejs');
 
 require('./routes/web')(app);
 
+app.use(function (reqq, res) {
+  res.status(404).render('errors/404');
+});
 var server = app.listen(3000, function () {
   console.log("Listening on port ".concat(PORT));
 }); //Socket
