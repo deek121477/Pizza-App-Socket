@@ -82,7 +82,7 @@ require('./routes/web')(app)
 app.use((reqq, res) =>{
     res.status(404).render('errors/404')
 })
-const server = app.listen(3000, () => {
+const server = app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`)
 })
 
