@@ -8,6 +8,8 @@ var _admin = require("./admin");
 
 var _moment = _interopRequireDefault(require("moment"));
 
+var _stripe = require("./stripe");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -86,7 +88,8 @@ function updateStatus(order) {
   });
 }
 
-updateStatus(order); //Socket
+updateStatus(order);
+(0, _stripe.initStripe)(); //Socket
 
 var socket = io();
 (0, _admin.initAdmin)(socket); //join

@@ -4,17 +4,22 @@ var Order = require('../../../models/order');
 
 var moment = require('moment');
 
+var stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
+
 function orderController() {
   return {
     store: function store(req, res) {
       //Validate request
       var _req$body = req.body,
           phone = _req$body.phone,
-          address = _req$body.address;
+          address = _req$body.address,
+          stripeToken = _req$body.stripeToken,
+          paymentType = _req$body.paymentType;
 
       if (!phone || !address) {
-        req.flash('error', 'Please fill all the fields.');
-        return res.redirect('/cart');
+        return res.status(422).json({
+          message: 'Please fill all the fields.'
+        });
       }
 
       var order = new Order({
@@ -27,16 +32,45 @@ function orderController() {
         Order.populate(result, {
           path: 'customerId'
         }, function (err, placedOrder) {
-          req.flash('success', 'Order placed Successfully');
-          delete req.session.cart; // Emit event 
-
-          var eventEmitter = req.app.get('eventEmitter');
-          eventEmitter.emit('orderPlaced', placedOrder);
-          return res.redirect('/customer/orders');
+          // req.flash('success', 'Order placed Successfully')
+          //Stripe payment
+          if (paymentType === 'card') {
+            stripe.charges.create({
+              amount: req.session.cart.totalPrice * 100,
+              source: stripeToken,
+              currency: 'inr',
+              description: "Pizza order: ".concat(placedOrder._id)
+            }).then(function () {
+              placedOrder.paymentStatus = true;
+              placedOrder.paymentType = paymentType;
+              placedOrder.save().then(function (ord) {
+                // Emit event 
+                var eventEmitter = req.app.get('eventEmitter');
+                eventEmitter.emit('orderPlaced', ord);
+                delete req.session.cart;
+                return res.json({
+                  message: 'Yay 😀😀 Payment successful, Order placed Successfully'
+                });
+              })["catch"](function (err) {
+                console.log(err);
+              });
+            })["catch"](function (err) {
+              delete req.session.cart;
+              return res.json({
+                message: 'Order placed but Payment failed, Dont worry you can also pay at delivery time'
+              });
+            });
+          } else {
+            delete req.session.cart;
+            return res.json({
+              message: 'Order placed, Pay at delivery time'
+            });
+          }
         });
       })["catch"](function (err) {
-        req.flash('error', 'Something went wrong');
-        return res.redirect('/cart');
+        return res.status(500).json({
+          message: 'Something went wrong.'
+        });
       });
     },
     index: function index(req, res) {

@@ -25,6 +25,10 @@ var orderSchema = new Schema({
     type: String,
     "default": 'COD'
   },
+  paymentStatus: {
+    type: Boolean,
+    "default": false
+  },
   status: {
     type: String,
     "default": 'order_placed'
