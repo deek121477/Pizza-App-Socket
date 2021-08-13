@@ -4,7 +4,7 @@ const app = express()
 const ejs = require('ejs')
 const path = require('path')
 const expressLayout = require('express-ejs-layouts')
-const PORT1 = process.env.PORT || 3000
+const port = process.env.PORT || 3000
 const mongoose = require('mongoose')
 const session = require('express-session')
 const flash = require('express-flash')
@@ -79,12 +79,15 @@ app.set('view engine', 'ejs')
 
 require('./routes/web')(app)
 
-app.use((reqq, res) =>{
+app.use((req, res) =>{
     res.status(404).render('errors/404')
 })
-const server = app.listen(process.env.PORT || 3000, () => {
-    console.log(`Listening on port ${PORT1}`)
-})
+// const server = app.listen(process.env.PORT || 3000, () => {
+//     console.log(`Listening on port ${PORT1}`)
+// })
+
+const server = app.listen(port);
+console.log("Server listening on port "+ port);
 
 //Socket
 

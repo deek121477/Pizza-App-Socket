@@ -12,7 +12,7 @@ var path = require('path');
 
 var expressLayout = require('express-ejs-layouts');
 
-var PORT1 = process.env.PORT || 3000;
+var port = process.env.PORT || 3000;
 
 var mongoose = require('mongoose');
 
@@ -81,12 +81,14 @@ app.set('view engine', 'ejs');
 
 require('./routes/web')(app);
 
-app.use(function (reqq, res) {
+app.use(function (req, res) {
   res.status(404).render('errors/404');
-});
-var server = app.listen(process.env.PORT || 3000, function () {
-  console.log("Listening on port ".concat(PORT1));
-}); //Socket
+}); // const server = app.listen(process.env.PORT || 3000, () => {
+//     console.log(`Listening on port ${PORT1}`)
+// })
+
+var server = app.listen(port);
+console.log("Server listening on port " + port); //Socket
 
 var io = require('socket.io')(server);
 
